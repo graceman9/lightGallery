@@ -12,6 +12,7 @@
     var defaults = {
         autoplay: false,
         pause: 5000,
+        pausePerSlide: false,
         progressBar: true,
         fourceAutoplay: false,
         autoplayControls: true,
@@ -147,6 +148,43 @@
         });
     };
 
+    Autoplay.prototype.setPausePerSlide = function() {
+        var _this = this;
+        var _tmpPause;
+        _tmpPause = _this.core.$items.eq(_this.core.index).data('pause');
+        if (_tmpPause) {
+            if (!_this.core.s._pause) {
+                _this.core.s._pause = _this.core.s.pause;
+            }
+            _this.core.s.pause = _tmpPause;
+        }
+        else {
+            if (_this.core.s._pause) {
+                _this.core.s.pause = _this.core.s._pause;
+            }
+        }
+    };
+
+    Autoplay.prototype.setAutoplayInterval = function() {
+        var _this = this;
+        _this.interval = setInterval(function() {
+            if (_this.core.index + 1 < _this.core.$items.length) {
+                _this.core.index++;
+            } else {
+                _this.core.index = 0;
+            }
+
+            _this.fromAuto = true;
+            _this.core.slide(_this.core.index, false, false);
+
+            if (_this.core.s.pausePerSlide) {
+                clearInterval(_this.interval);
+                _this.setPausePerSlide();
+                _this.setAutoplayInterval();
+            }
+        }, _this.core.s.speed + _this.core.s.pause);
+    };
+
     // Autostart gallery
     Autoplay.prototype.startlAuto = function() {
         var _this = this;
@@ -155,17 +193,10 @@
         _this.core.$outer.addClass('lg-show-autoplay');
         _this.core.$outer.find('.lg-progress-bar').addClass('lg-start');
 
-        _this.interval = setInterval(function() {
-            if (_this.core.index + 1 < _this.core.$items.length) {
-                _this.core.index = _this.core.index;
-            } else {
-                _this.core.index = -1;
-            }
-
-            _this.core.index++;
-            _this.fromAuto = true;
-            _this.core.slide(_this.core.index, false, false);
-        }, _this.core.s.speed + _this.core.s.pause);
+        if (_this.core.s.pausePerSlide) {
+            _this.setPausePerSlide();
+        }
+        _this.setAutoplayInterval();
     };
 
     // cancel Autostart
